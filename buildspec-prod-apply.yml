@@ -1,0 +1,39 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      # Install Terraform 1.6.5
+      - wget https://releases.hashicorp.com/terraform/1.6.5/terraform_1.6.5_linux_amd64.zip
+      #copy tfvar fro  S3
+      # Select Proper Worksspace
+      - unzip terraform_1.6.5_linux_amd64.zip
+      - sudo mv terraform /usr/local/bin/
+      - terraform version
+      - aws --version
+
+  pre_build:
+    commands:
+      # Set up AWS credentials and other environment variables
+      - ./aws-secret-from-role.sh
+      # copy environment wise terraform varaiable file
+      - export S3_BUCKET_NAME="myterraformbucketishan" # terraform.tfvars file for all the environments will be store here
+      - export S3_FILE_KEY="env:/Prod/terraform.prod.tfvars" # development environment folder name
+      - export CODEBUILD_DESTINATION="./infra/"
+      - aws s3 cp "s3://${S3_BUCKET_NAME}/${S3_FILE_KEY}" "${CODEBUILD_DESTINATION}/"
+      - cd ./infra/
+
+  build:
+    commands:
+      # Terraform commands
+      - echo Initializing Terraform...
+      - terraform init
+      - echo Selecting/Creating Terraform workspace...
+      - terraform workspace new Prod || true
+      - terraform workspace select Prod
+      - echo Applying Terraform...
+      - terraform apply -var-file=terraform.prod.tfvars -auto-approve
+
+  post_build:
+    commands:
+      - echo terraform apply completed.

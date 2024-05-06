@@ -1,0 +1,11 @@
+.terraform.tfstate.lock.info
+# terraform.tfstate
+terraform.tfstate.backup
+# .terraform.lock.hcl
+.terraform/
+.infracost/
+.terraform-modules/
+.env
+terraform.tfvars
+terraform.dev.tfvars
+terraform.prod.tfvars
