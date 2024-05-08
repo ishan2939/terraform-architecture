@@ -79,6 +79,7 @@ jobs:
     # Fetch tfvar file from s3 bucket
     - name: Fetch tfvars from s3 bucket
       env: 
+        AWS_REGION: "us-east-1"
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
       run: |
