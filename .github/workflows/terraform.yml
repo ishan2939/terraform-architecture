@@ -79,7 +79,7 @@ jobs:
     # Fetch tfvar file from s3 bucket
     - name: Fetch tfvars from s3 bucket
       run: |
-            ./aws-secret-from-role.sh
+            ./../../aws-secret-from-role.sh
             export S3_BUCKET_NAME="myterraformbucketishan"
             export S3_FILE_KEY="env:/Dev/terraform.dev.tfvars" # development environment folder name
             export CODEBUILD_DESTINATION="./infra/"
