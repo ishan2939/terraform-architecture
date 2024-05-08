@@ -89,6 +89,7 @@ jobs:
             export CODEBUILD_DESTINATION="./infra/"
             aws s3 cp "s3://${S3_BUCKET_NAME}/${S3_FILE_KEY}" "${CODEBUILD_DESTINATION}"
             cd ./infra/
+            sudo ls -a
             
     # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
     - name: Terraform Init
