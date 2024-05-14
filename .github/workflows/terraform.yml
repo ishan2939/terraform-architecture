@@ -153,28 +153,18 @@ jobs:
           terraform plan -var-file=terraform.dev.tfvars -input=false
 
   manual-approval:
-    name: "Manual Approval"
     runs-on: ubuntu-latest
     needs: [terraform-plan]
-    environment: Dev
-
-    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
-    defaults:
-      run:
-        shell: bash
+    if: github.event_name == 'workflow_dispatch'
 
     steps:
-      - name: Manual approval
-        id: approval
-        uses: wei/git-approval@v2
-        with:
-          github_token: ${{ secrets.GITHUBTOKEN }}
-          permission_to_modify: wei/git-approval@v2
-          approve_command: "Ready for deployment"
+    - name: Manual approval
+      run: echo "${{ github.event.inputs.manual_approval_message }}" | grep -iq 'approve'
+      id: approval
 
-          # Continue if the manual approval is given
-          if: steps.approval.outputs.approved == 'true'
-          run: echo "Manual approval received. Ready for deployment!"
+    - name: Proceed with deployment
+      if: steps.approval.outputs.result == '0'
+      run: echo "Manual approval received. Ready for deployment!"
 
   terraform-apply:
     name: "Terraform apply"
