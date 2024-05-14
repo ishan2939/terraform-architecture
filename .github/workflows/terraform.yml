@@ -161,7 +161,7 @@ jobs:
     steps:
       - uses: trstringer/manual-approval@v1
         with:
-          secret: ${{ github.GITHUBTOKEN }}
+          secret: ${{ secrets.GITHUBTOKEN }}
           approvers: ishan2939
           minimum-approvals: 1
           issue-title: "Running terraform apply"
