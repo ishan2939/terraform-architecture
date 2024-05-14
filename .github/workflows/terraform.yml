@@ -52,70 +52,9 @@ on:
 permissions:
   contents: read
 
-# jobs:
-# terraform:
-#   name: 'Terraform'
-#   runs-on: ubuntu-latest
-#   environment: Dev
-
-#   # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
-#   defaults:
-#     run:
-#       shell: bash
-
-#   steps:
-#   # Checkout the repository to the GitHub Actions runner
-#   - name: Checkout
-#     uses: actions/checkout@v4
-
-#   # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
-#   - name: Setup Terraform
-#     run: |
-#         wget https://releases.hashicorp.com/terraform/1.6.5/terraform_1.6.5_linux_amd64.zip
-#         unzip terraform_1.6.5_linux_amd64.zip
-#         sudo mv terraform /usr/local/bin/
-#         terraform version
-
-#   # Fetch tfvar file from s3 bucket
-#   - name: Fetch tfvars from s3 bucket
-#     env:
-#       AWS_REGION: "us-east-1"
-#       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
-#       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
-#     run: |
-#           /bin/sh aws-secret-from-role.sh
-#           export S3_BUCKET_NAME="myterraformbucketishan"
-#           export S3_FILE_KEY="env:/Dev/terraform.dev.tfvars" # development environment folder name
-#           export CODEBUILD_DESTINATION="./infra/"
-#           aws s3 cp "s3://${S3_BUCKET_NAME}/${S3_FILE_KEY}" "${CODEBUILD_DESTINATION}"
-
-#   # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
-#   - name: Terraform Init
-#     run: |
-#       cd ./infra/
-#       terraform init
-#       sudo ls -a
-
-#   # Checks that all Terraform configuration files adhere to a canonical format
-#   - name: Terraform Format
-#     run: terraform fmt -check
-
-#   # Generates an execution plan for Terraform
-#   - name: Terraform Plan
-#     run: |
-#       cd ./infra/
-#       terraform plan -var-file=terraform.dev.tfvars -input=false
-#       sudo ls -a
-
-#     # On push to "master", build or change infrastructure according to Terraform configuration files
-#     # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
-#   #- name: Terraform Apply
-#     #if: github.ref == 'refs/heads/"master"' && github.event_name == 'push'
-#     #run: terraform apply -var-file=terraform.dev.tfvars -auto-approve -input=false
-
 jobs:
   terraform-init:
-    name: "terraform init"
+    name: "Terraform init"
     runs-on: ubuntu-latest
     environment: Dev
 
@@ -161,7 +100,7 @@ jobs:
         run: terraform fmt -check
 
   terraform-plan:
-    name: "terraform plan"
+    name: " Terraform plan"
     runs-on: ubuntu-latest
     needs: [terraform-init]
     environment: Dev
@@ -213,10 +152,34 @@ jobs:
           cd ./infra/
           terraform plan -var-file=terraform.dev.tfvars -input=false
 
-  terraform-apply:
-    name: "terraform apply"
+  manual-approval:
+    name: "Manual Approval"
     runs-on: ubuntu-latest
     needs: [terraform-plan]
+    environment: Dev
+
+    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Manual approval
+        id: approval
+        uses: wei/git-approval@v2
+        with:
+          github_token: ${{ secrets.GITHUBTOKEN }}
+          permission_to_modify: wei/git-approval@v2
+          approve_command: "Ready for deployment"
+
+          # Continue if the manual approval is given
+          if: steps.approval.outputs.approved == 'true'
+          run: echo "Manual approval received. Ready for deployment!"
+
+  terraform-apply:
+    name: "Terraform apply"
+    runs-on: ubuntu-latest
+    needs: [manual-approval]
     environment: Dev
 
     # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
